@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quotation-service-config
+  namespace: quotation-service
+  labels:
+    app.kubernetes.io/name: quotation-service
+    app.kubernetes.io/component: config
+    app.kubernetes.io/part-of: techplanner
+data:
+  SPRING_APPLICATION_NAME: quotation-service
+  SERVER_PORT: "8080"
+  SPRING_PROFILES_ACTIVE: k8s
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+  MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"

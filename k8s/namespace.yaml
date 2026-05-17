@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: quotation-service
+  labels:
+    app.kubernetes.io/name: quotation-service
+    app.kubernetes.io/part-of: techplanner
+    app.kubernetes.io/managed-by: kubectl

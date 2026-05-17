@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quotation-service
+  namespace: quotation-service
+  labels:
+    app.kubernetes.io/name: quotation-service
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: techplanner
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: quotation-service.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: quotation-service
+                port:
+                  number: 80
