@@ -5,7 +5,9 @@ import quotation_service.dto.ComponentDto;
 import quotation_service.dto.CompatibilityResult;
 import quotation_service.dto.QuotationRequest;
 import quotation_service.dto.QuotationResponse;
-import quotation_service.recommendation.RecommendationService;
+import com.techplanner.recommendationlib.model.RecommendationRequest;
+import com.techplanner.recommendationlib.model.RecommendationResult;
+import com.techplanner.recommendationlib.service.RecommendationService;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -26,8 +28,8 @@ public class QuotationServiceImpl implements QuotationService {
     @Override
     public QuotationResponse createQuotation(QuotationRequest request) {
         List<ComponentDto> componentsToAnalyze = request.components() == null || request.components().isEmpty()
-                ? recommendationService.recommend(request.usageType(), request.budget())
-                : request.components();
+            ? mapToComponents(recommendationService.recommend(new RecommendationRequest(request.usageType(), request.budget())))
+            : request.components();
 
         BigDecimal total = componentsToAnalyze.stream()
                 .map(ComponentDto::price)
@@ -56,5 +58,25 @@ public class QuotationServiceImpl implements QuotationService {
             notes,
             compatibility
         );
+    }
+
+    private List<ComponentDto> mapToComponents(RecommendationResult recommendationResult) {
+        return recommendationResult.components().stream()
+                .map(component -> new ComponentDto(
+                        component.category(),
+                        component.model(),
+                        component.price(),
+                        component.socket(),
+                        component.ramType(),
+                        component.capacityGb(),
+                        component.powerConsumptionWatts(),
+                        component.psuWattage(),
+                        component.maxRamGb(),
+                        component.storageInterface(),
+                        component.supportedSockets(),
+                        component.supportedRamTypes(),
+                        component.supportedStorageInterfaces()
+                ))
+                .toList();
     }
 }

@@ -10,7 +10,11 @@ import quotation_service.dto.ComponentDto;
 import quotation_service.dto.CompatibilityResult;
 import quotation_service.dto.QuotationResponse;
 import quotation_service.pdf.PdfService;
-import quotation_service.recommendation.RecommendationService;
+import com.techplanner.recommendationlib.model.ComponentRecommendation;
+import com.techplanner.recommendationlib.model.RecommendationRequest;
+import com.techplanner.recommendationlib.model.RecommendationResult;
+import com.techplanner.recommendationlib.model.UsageType;
+import com.techplanner.recommendationlib.service.RecommendationService;
 import quotation_service.service.QuotationService;
 
 import java.math.BigDecimal;
@@ -70,9 +74,10 @@ class QuotationControllerTest {
 
     @Test
     void recommendationEndpointShouldReturnComponents() throws Exception {
-        when(recommendationService.recommend("gaming", BigDecimal.valueOf(2000))).thenReturn(List.of(
-                new ComponentDto("CPU", "AMD Ryzen 7", BigDecimal.valueOf(320), "AM5", null, null, 105, null, null, null, null, null, null)
-        ));
+        when(recommendationService.recommend(new RecommendationRequest("gaming", BigDecimal.valueOf(2000))))
+                .thenReturn(new RecommendationResult(UsageType.GAMING, List.of(
+                        new ComponentRecommendation("CPU", "AMD Ryzen 7", BigDecimal.valueOf(320), "AM5", null, null, 105, null, null, null, null, null, null)
+                ), BigDecimal.valueOf(320), List.of()));
 
         mockMvc.perform(get("/api/quotations/recommendation")
                         .param("usage", "gaming")
