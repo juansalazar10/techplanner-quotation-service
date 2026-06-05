@@ -21,8 +21,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/quotations")
-@Validated
+@CrossOrigin(origins = "http://localhost:4200")
 public class QuotationController {
+
 
     private final QuotationService quotationService;
     private final RecommendationProcessService recommendationProcessService;

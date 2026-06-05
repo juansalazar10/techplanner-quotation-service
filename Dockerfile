@@ -17,7 +17,8 @@ ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/.
 RUN useradd --system --create-home --uid 1001 spring
 
 COPY --from=build /workspace/target/*.jar /app/app.jar
-COPY recommendation-lib.exe /app/recommendation-lib.exe
+COPY recommendation-lib /app/recommendation-lib
+RUN chmod +x /app/recommendation-lib
 
 EXPOSE 8080
 
