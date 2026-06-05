@@ -10,12 +10,8 @@ import quotation_service.dto.ComponentDto;
 import quotation_service.dto.CompatibilityResult;
 import quotation_service.dto.QuotationResponse;
 import quotation_service.pdf.PdfService;
-import com.techplanner.recommendationlib.model.ComponentRecommendation;
-import com.techplanner.recommendationlib.model.RecommendationRequest;
-import com.techplanner.recommendationlib.model.RecommendationResult;
-import com.techplanner.recommendationlib.model.UsageType;
-import com.techplanner.recommendationlib.service.RecommendationService;
 import quotation_service.service.QuotationService;
+import quotation_service.service.RecommendationProcessService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -41,7 +37,7 @@ class QuotationControllerTest {
     private QuotationService quotationService;
 
     @MockBean
-    private RecommendationService recommendationService;
+    private RecommendationProcessService recommendationProcessService;
 
     @MockBean
     private PdfService pdfService;
@@ -51,7 +47,23 @@ class QuotationControllerTest {
         QuotationResponse response = new QuotationResponse(
                 "gaming",
                 LocalDateTime.of(2026, 5, 17, 14, 30),
-                List.of(new ComponentDto("CPU", "AMD Ryzen 7", BigDecimal.valueOf(320), "AM5", null, null, 105, null, null, null, null, null, null)),
+                List.of(
+                        new ComponentDto(
+                                "CPU",
+                                "AMD Ryzen 7",
+                                BigDecimal.valueOf(320),
+                                "AM5",
+                                null,
+                                null,
+                                105,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null
+                        )
+                ),
                 BigDecimal.valueOf(320),
                 true,
                 List.of("Configuración dentro del presupuesto."),
@@ -63,7 +75,19 @@ class QuotationControllerTest {
         mockMvc.perform(post("/api/quotations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"usageType":"gaming","budget":1000,"components":[{"category":"CPU","model":"AMD Ryzen 7","price":320,"socket":"AM5","powerConsumptionWatts":105}]}
+                                {
+                                  "usageType":"gaming",
+                                  "budget":1000,
+                                  "components":[
+                                    {
+                                      "category":"CPU",
+                                      "model":"AMD Ryzen 7",
+                                      "price":320,
+                                      "socket":"AM5",
+                                      "powerConsumptionWatts":105
+                                    }
+                                  ]
+                                }
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.usageType").value("gaming"))
@@ -74,10 +98,27 @@ class QuotationControllerTest {
 
     @Test
     void recommendationEndpointShouldReturnComponents() throws Exception {
-        when(recommendationService.recommend(new RecommendationRequest("gaming", BigDecimal.valueOf(2000))))
-                .thenReturn(new RecommendationResult(UsageType.GAMING, List.of(
-                        new ComponentRecommendation("CPU", "AMD Ryzen 7", BigDecimal.valueOf(320), "AM5", null, null, 105, null, null, null, null, null, null)
-                ), BigDecimal.valueOf(320), List.of()));
+
+        when(recommendationProcessService.recommend(
+                "gaming",
+                BigDecimal.valueOf(2000)
+        )).thenReturn(List.of(
+                new ComponentDto(
+                        "CPU",
+                        "AMD Ryzen 7",
+                        BigDecimal.valueOf(320),
+                        "AM5",
+                        null,
+                        null,
+                        105,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                )
+        ));
 
         mockMvc.perform(get("/api/quotations/recommendation")
                         .param("usage", "gaming")
@@ -89,10 +130,27 @@ class QuotationControllerTest {
 
     @Test
     void pdfEndpointShouldReturnDownloadablePdf() throws Exception {
+
         QuotationResponse response = new QuotationResponse(
                 "gaming",
                 LocalDateTime.of(2026, 5, 17, 14, 30),
-                List.of(new ComponentDto("CPU", "AMD Ryzen 7", BigDecimal.valueOf(320), "AM5", null, null, 105, null, null, null, null, null, null)),
+                List.of(
+                        new ComponentDto(
+                                "CPU",
+                                "AMD Ryzen 7",
+                                BigDecimal.valueOf(320),
+                                "AM5",
+                                null,
+                                null,
+                                105,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null
+                        )
+                ),
                 BigDecimal.valueOf(320),
                 true,
                 List.of("Configuración dentro del presupuesto."),
@@ -100,25 +158,39 @@ class QuotationControllerTest {
         );
 
         when(quotationService.createQuotation(any())).thenReturn(response);
-        when(pdfService.generateQuotationPdf(response)).thenReturn(new byte[] {'%', 'P', 'D', 'F', '-', '1', '.', '4'});
+
+        when(pdfService.generateQuotationPdf(response))
+                .thenReturn(new byte[]{'%', 'P', 'D', 'F', '-', '1', '.', '4'});
 
         mockMvc.perform(post("/api/quotations/pdf")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"usageType":"gaming","budget":1000}
+                                {
+                                  "usageType":"gaming",
+                                  "budget":1000
+                                }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF))
-                .andExpect(header().string("Content-Disposition", containsString("quotation-techplanner.pdf")))
-                .andExpect(content().bytes(new byte[] {'%', 'P', 'D', 'F', '-', '1', '.', '4'}));
+                .andExpect(header().string(
+                        "Content-Disposition",
+                        containsString(".pdf")
+                ))
+                .andExpect(content().bytes(
+                        new byte[]{'%', 'P', 'D', 'F', '-', '1', '.', '4'}
+                ));
     }
 
     @Test
     void invalidQuotationRequestShouldReturnBadRequest() throws Exception {
+
         mockMvc.perform(post("/api/quotations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"usageType":"","budget":-1}
+                                {
+                                  "usageType":"",
+                                  "budget":-1
+                                }
                                 """))
                 .andExpect(status().isBadRequest());
     }

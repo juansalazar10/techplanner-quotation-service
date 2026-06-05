@@ -9,11 +9,6 @@ import quotation_service.dto.ComponentDto;
 import quotation_service.dto.CompatibilityResult;
 import quotation_service.dto.QuotationRequest;
 import quotation_service.dto.QuotationResponse;
-import com.techplanner.recommendationlib.model.RecommendationRequest;
-import com.techplanner.recommendationlib.model.RecommendationResult;
-import com.techplanner.recommendationlib.model.ComponentRecommendation;
-import com.techplanner.recommendationlib.model.UsageType;
-import com.techplanner.recommendationlib.service.RecommendationService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,7 +22,7 @@ import static org.mockito.Mockito.when;
 class QuotationServiceImplTest {
 
     @Mock
-    private RecommendationService recommendationService;
+    private RecommendationProcessService recommendationProcessService;
 
     @Mock
     private CompatibilityService compatibilityService;
@@ -37,14 +32,13 @@ class QuotationServiceImplTest {
 
     @Test
     void createQuotationShouldCalculateTotalAndIncludeCompatibilityResult() {
-        List<ComponentRecommendation> recommended = List.of(
-            new ComponentRecommendation("CPU", "Intel Core i3", BigDecimal.valueOf(100), "LGA1700", null, null, 60, null, null, null, null, null, null),
-            new ComponentRecommendation("RAM", "16GB DDR4", BigDecimal.valueOf(50), null, "DDR4", 16, 8, null, null, null, null, null, null)
+        List<ComponentDto> recommended = List.of(
+            new ComponentDto("CPU", "Intel Core i3", BigDecimal.valueOf(100), "LGA1700", null, null, 60, null, null, null, null, null, null),
+            new ComponentDto("RAM", "16GB DDR4", BigDecimal.valueOf(50), null, "DDR4", 16, 8, null, null, null, null, null, null)
         );
         CompatibilityResult compatibilityResult = new CompatibilityResult(true, List.of(), 68, 85);
 
-        when(recommendationService.recommend(new RecommendationRequest("oficina", BigDecimal.valueOf(200))))
-            .thenReturn(new RecommendationResult(UsageType.OFFICE, recommended, BigDecimal.valueOf(150), List.of("Configuración dentro del presupuesto estimado.")));
+        when(recommendationProcessService.recommend("oficina", BigDecimal.valueOf(200))).thenReturn(recommended);
         when(compatibilityService.validate(List.of(
             new ComponentDto("CPU", "Intel Core i3", BigDecimal.valueOf(100), "LGA1700", null, null, 60, null, null, null, null, null, null),
             new ComponentDto("RAM", "16GB DDR4", BigDecimal.valueOf(50), null, "DDR4", 16, 8, null, null, null, null, null, null)
@@ -59,7 +53,7 @@ class QuotationServiceImplTest {
         assertThat(response.withinBudget()).isTrue();
         assertThat(response.notes()).contains("Configuración dentro del presupuesto.");
         assertThat(response.compatibility()).isEqualTo(compatibilityResult);
-        verify(recommendationService).recommend(new RecommendationRequest("oficina", BigDecimal.valueOf(200)));
+        verify(recommendationProcessService).recommend("oficina", BigDecimal.valueOf(200));
         verify(compatibilityService).validate(List.of(
             new ComponentDto("CPU", "Intel Core i3", BigDecimal.valueOf(100), "LGA1700", null, null, 60, null, null, null, null, null, null),
             new ComponentDto("RAM", "16GB DDR4", BigDecimal.valueOf(50), null, "DDR4", 16, 8, null, null, null, null, null, null)

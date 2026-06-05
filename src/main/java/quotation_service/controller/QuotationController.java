@@ -13,10 +13,8 @@ import quotation_service.dto.ComponentDto;
 import quotation_service.dto.QuotationRequest;
 import quotation_service.dto.QuotationResponse;
 import quotation_service.pdf.PdfService;
+import quotation_service.service.RecommendationProcessService;
 import quotation_service.service.QuotationService;
-import com.techplanner.recommendationlib.model.RecommendationRequest;
-import com.techplanner.recommendationlib.model.RecommendationResult;
-import com.techplanner.recommendationlib.service.RecommendationService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,16 +25,16 @@ import java.util.List;
 public class QuotationController {
 
     private final QuotationService quotationService;
-    private final RecommendationService recommendationService;
+        private final RecommendationProcessService recommendationProcessService;
     private final PdfService pdfService;
 
     public QuotationController(
             QuotationService quotationService,
-            RecommendationService recommendationService,
+                        RecommendationProcessService recommendationProcessService,
             PdfService pdfService
     ) {
         this.quotationService = quotationService;
-        this.recommendationService = recommendationService;
+                this.recommendationProcessService = recommendationProcessService;
         this.pdfService = pdfService;
     }
 
@@ -52,28 +50,7 @@ public class QuotationController {
             @RequestParam(required = false) BigDecimal budget
     ) {
 
-        RecommendationResult result =
-                recommendationService.recommend(new RecommendationRequest(usage, budget));
-
-        List<ComponentDto> response = result.components().stream()
-                .map(component -> new ComponentDto(
-                        component.category(),
-                        component.model(),
-                        component.price(),
-                        component.socket(),
-                        component.ramType(),
-                        component.capacityGb(),
-                        component.powerConsumptionWatts(),
-                        component.psuWattage(),
-                        component.maxRamGb(),
-                        component.storageInterface(),
-                        component.supportedSockets(),
-                        component.supportedRamTypes(),
-                        component.supportedStorageInterfaces()
-                ))
-                .toList();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(recommendationProcessService.recommend(usage, budget));
     }
 
     @PostMapping(value = "/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
